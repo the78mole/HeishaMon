@@ -1,6 +1,7 @@
 {
-  "name": "arduino-cli",
-  "image": "ghcr.io/the78mole/heishamon-dev:latest",
+  "name": "arduino-pio",
+  //"image": "ghcr.io/the78mole/heishamon-dev:latest",
+  "image": "ghcr.io/the78mole/heishamon-pio:latest",
   "postCreateCommand": "./.devcontainer/postCreate.sh",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -14,7 +15,11 @@
     "vscode": {
       "extensions": [
         "vsciot-vscode.vscode-arduino",
-        "ms-vscode.cpptools"
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.vscode-python-envs",
+        "platformio.platformio-ide"
       ]
     }
   },
