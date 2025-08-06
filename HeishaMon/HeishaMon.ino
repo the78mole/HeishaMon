@@ -45,7 +45,7 @@
 #include "commands.h"
 #include "rules.h"
 #include "script_engine.h"
-#include "webdav_server.h"
+#include "script_server.h"
 #include "version.h"
 
 DNSServer dnsServer;
@@ -1515,10 +1515,10 @@ void setup() {
   //LittleFS.remove("/doublereset");  
   //loggingSerial.println(F("End of setup.."));
 
-  // Start WebDAV server for script editing
+  // Start script server for remote script editing
   if (WiFi.status() == WL_CONNECTED) {
-    webdavServer.begin();
-    logprintf_P(F("WebDAV server available at http://%s:8080/scripts/"), WiFi.localIP().toString().c_str());
+    scriptServer.begin();
+    logprintf_P(F("Script server available at http://%s:8080/scripts/"), WiFi.localIP().toString().c_str());
   }
 
   inSetup = false;
@@ -1590,8 +1590,8 @@ void loop() {
   //webserver function
   webserver_loop();
   
-  // Handle WebDAV server
-  webdavServer.handleClient();
+  // Handle script server
+  scriptServer.handleClient();
 
   // check wifi
   check_wifi();

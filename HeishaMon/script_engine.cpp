@@ -66,9 +66,53 @@ bool ScriptEngine::executeString(const char* script) {
         return false;
     }
     
-    // For now, just log that we would execute the script
-    // This will be replaced with actual Lua execution later
-    logprintf_P(F("Would execute script: %s"), script);
+    // For now, provide a simple script interpreter that handles basic commands
+    // This demonstrates the concept and can be extended with full Lua later
+    
+    String scriptStr = String(script);
+    scriptStr.trim();
+    
+    if (scriptStr.length() == 0) {
+        return true;
+    }
+    
+    logprintf_P(F("Executing script: %s"), scriptStr.c_str());
+    
+    // Simple command parsing - look for common patterns
+    if (scriptStr.startsWith("print(")) {
+        // Extract print message
+        int start = scriptStr.indexOf('"');
+        int end = scriptStr.lastIndexOf('"');
+        if (start >= 0 && end > start) {
+            String message = scriptStr.substring(start + 1, end);
+            logprintf_P(F("Script output: %s"), message.c_str());
+        }
+        return true;
+    }
+    
+    if (scriptStr.startsWith("log(")) {
+        // Extract log message
+        int start = scriptStr.indexOf('"');
+        int end = scriptStr.lastIndexOf('"');
+        if (start >= 0 && end > start) {
+            String message = scriptStr.substring(start + 1, end);
+            logprintf_P(F("Script log: %s"), message.c_str());
+        }
+        return true;
+    }
+    
+    if (scriptStr.indexOf("sendCommand(") >= 0) {
+        logprintf_P(F("Script would send command (not implemented yet)"));
+        return true;
+    }
+    
+    if (scriptStr.indexOf("getSensorData(") >= 0) {
+        logprintf_P(F("Script would get sensor data (not implemented yet)"));
+        return true;
+    }
+    
+    // For any other script content, just acknowledge it
+    logprintf_P(F("Script content processed (basic interpreter)"));
     return true;
 }
 
