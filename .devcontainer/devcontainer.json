@@ -1,6 +1,6 @@
 {
   "name": "arduino-pio",
-  "image": "ghcr.io/the78mole/heishamon-pio:v0.0.8",
+  "image": "ghcr.io/the78mole/heishamon-pio:v0.0.9",
   "postCreateCommand": "./.devcontainer/postCreate.sh",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
