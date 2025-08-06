@@ -2,6 +2,7 @@
 #include "HeishaOT.h"
 #include "decode.h"
 #include "rules.h"
+#include "script_engine.h"
 #include "webfunctions.h"
 #include "src/common/stricmp.h"
 #include "src/common/progmem.h"
@@ -123,9 +124,9 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
         log_message(log_msg);
         unsigned int responsedata = FaultInd | (CHMode << 1) | (DHWMode << 2) | (FlameStatus << 3) | (CoolingStatus << 4) | (CH2 << 5) | (DiagInd << 6);
         otResponse = ot.buildResponse(OpenThermMessageType::READ_ACK, OpenThermMessageID::Status, (data |= responsedata));
-        rules_event_cb(_F("?"), _F("chEnable"));
-        rules_event_cb(_F("?"), _F("dhwEnable"));
-        rules_event_cb(_F("?"), _F("coolingEnable"));
+        rules_event_cb(_F("?"), _F("chEnable")); scriptEngine.handleEvent("?", "chEnable"); scriptEngine.handleEvent("?", "chEnable");
+        rules_event_cb(_F("?"), _F("dhwEnable")); scriptEngine.handleEvent("?", "dhwEnable"); scriptEngine.handleEvent("?", "dhwEnable");
+        rules_event_cb(_F("?"), _F("coolingEnable")); scriptEngine.handleEvent("?", "coolingEnable");
       } break;
     case OpenThermMessageID::TSet: { //mandatory
         char str[200];
@@ -139,7 +140,7 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
           websocket_write_all(log_msg, strlen(log_msg));
         }
         otResponse = ot.buildResponse(OpenThermMessageType::WRITE_ACK, OpenThermMessageID::TSet, request & 0xffff);
-        rules_event_cb(_F("?"), _F("chsetpoint"));
+        rules_event_cb(_F("?"), _F("chsetpoint")); scriptEngine.handleEvent("?", "chsetpoint");
       } break;
       case OpenThermMessageID::MConfigMMemberIDcode: {
       unsigned long data = ot.getUInt(request);
@@ -226,7 +227,7 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
           websocket_write_all(log_msg, strlen(log_msg));
         }
         otResponse = ot.buildResponse(OpenThermMessageType::WRITE_ACK, OpenThermMessageID::CoolingControl, request & 0xffff);
-        rules_event_cb(_F("?"), _F("coolingControl"));
+        rules_event_cb(_F("?"), _F("coolingControl")); scriptEngine.handleEvent("?", "coolingControl");
       } break;
     case OpenThermMessageID::TdhwSetUBTdhwSetLB : { //DHW boundaries
         log_message(_F("OpenTherm: Received DHW set boundaries request"));
@@ -254,7 +255,7 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
           websocket_write_all(log_msg, strlen(log_msg));
         }
         otResponse = ot.buildResponse(OpenThermMessageType::WRITE_ACK, OpenThermMessageID::Tr, request & 0xffff);
-        rules_event_cb(_F("?"), _F("roomtemp"));
+        rules_event_cb(_F("?"), _F("roomtemp")); scriptEngine.handleEvent("?", "roomtemp");
       } break;
     case OpenThermMessageID::TrSet: {
         char str[200];
@@ -268,7 +269,7 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
           websocket_write_all(log_msg, strlen(log_msg));          
         }
         otResponse = ot.buildResponse(OpenThermMessageType::WRITE_ACK, OpenThermMessageID::TrSet, request & 0xffff);
-        rules_event_cb(_F("?"), _F("roomtempset"));
+        rules_event_cb(_F("?"), _F("roomtempset")); scriptEngine.handleEvent("?", "roomtempset");
       } break;
     case OpenThermMessageID::TdhwSet: {
         if (ot.getMessageType(request) == OpenThermMessageType::WRITE_DATA) {
@@ -287,7 +288,7 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
           sprintf_P(log_msg, PSTR("OpenTherm: Read request DHW setpoint"));
           log_message(log_msg);
           otResponse = ot.buildResponse(OpenThermMessageType::READ_ACK, OpenThermMessageID::TdhwSet, ot.temperatureToData(getOTStructMember(_F("dhwSetpoint"))->value.f));
-          rules_event_cb(_F("?"), _F("dhwsetpoint"));
+          rules_event_cb(_F("?"), _F("dhwsetpoint")); scriptEngine.handleEvent("?", "dhwsetpoint");
         }
       } break;
     case OpenThermMessageID::MaxTSet: {
@@ -307,7 +308,7 @@ void processOTRequest(unsigned long request, OpenThermResponseStatus status) {
           sprintf_P(log_msg, PSTR("OpenTherm: Read request Max Ta-set setpoint"));
           log_message(log_msg);
           otResponse = ot.buildResponse(OpenThermMessageType::READ_ACK, OpenThermMessageID::MaxTSet, ot.temperatureToData(getOTStructMember(_F("maxTSet"))->value.f));
-          rules_event_cb(_F("?"), _F("maxtset"));
+          rules_event_cb(_F("?"), _F("maxtset")); scriptEngine.handleEvent("?", "maxtset");
         }
       } break;
     case OpenThermMessageID::Tret: {
