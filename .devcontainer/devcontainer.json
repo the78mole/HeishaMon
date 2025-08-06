@@ -1,6 +1,6 @@
 {
   "name": "arduino-cli",
-  "image": "ghcr.io/the78mole/heishamon-dev:latest",
+  "image": "ghcr.io/the78mole/heishamon-dev:v0.0.8",
   "postCreateCommand": "./.devcontainer/postCreate.sh",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
