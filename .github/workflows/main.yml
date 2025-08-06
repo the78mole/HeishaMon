@@ -2,56 +2,130 @@ name: Build binary
 
 on: [push, pull_request, workflow_dispatch]
 
-env:
-  ARDUINO_BOARD_MANAGER_ADDITIONAL_URLS: "http://arduino.esp8266.com/stable/package_esp8266com_index.json https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json"
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/the78mole/heishamon-pio:v0.0.9
+      options: --user root
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for semver action
+
+      - name: Determine version
+        id: version
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          tag_prefix: "v"
+          major_pattern: "/^(feat|fix|refactor)!:/"
+          minor_pattern: "/^feat:/"
+          version_format: "${major}.${minor}.${patch}"
+          bump_each_commit: true
+          search_commit_body: false
 
       - name: Update version.h
-        if: github.ref != 'refs/heads/main' #do not change version in main branch run
-        run: cd HeishaMon && echo "static const char *heishamon_version = \"Alpha-$(git rev-parse --short HEAD)\";" > version.h && cat version.h
-        shell: bash
-
-      - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v2
-
-      - name: Install platform
-        run:  |
-          arduino-cli core update-index
-          arduino-cli core install esp8266:esp8266
-          arduino-cli core install esp32:esp32@3.0.7
-
-      - name: Install dependencies
-        run:  arduino-cli lib install ringbuffer pubsubclient arduinojson dallastemperature onewire "Adafruit NeoPixel"
-
-      - name: Fix Onewire lib for ESP32-3.0.0
         run: |
-          sed -i '/#include <driver\/rtc_io\.h>/a\
-          #include <soc\/gpio_struct\.h>' \
-          /home/runner/Arduino/libraries/OneWire/util/OneWire_direct_gpio.h
-
-      - name: Compile Sketch for ESP8266
-        run: cd HeishaMon && arduino-cli compile --output-dir . --fqbn=esp8266:esp8266:d1_mini:xtal=160,vt=flash,ssl=basic,mmu=3216,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=921600 --warnings=none --verbose HeishaMon.ino
-
-      - name: Add MD5 checksum to ESP8266 binary
-        run: cd HeishaMon && MD5=`md5sum HeishaMon.ino.bin | cut -d\  -f1` && mv HeishaMon.ino.bin HeishaMon_ESP8266-alpha-$MD5.bin
+          cd HeishaMon
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "static const char *heishamon_version = \"v${{ steps.version.outputs.version }}\";" > version.h
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "static const char *heishamon_version = \"v${{ steps.version.outputs.version }}-pr${{ github.event.number }}-$(git rev-parse --short HEAD)\";" > version.h
+          else
+            echo "static const char *heishamon_version = \"v${{ steps.version.outputs.version }}-dev-$(git rev-parse --short HEAD)\";" > version.h
+          fi
+          cat version.h
         shell: bash
 
-      - name: Compile Sketch for ESP32
-        run: cd HeishaMon && arduino-cli compile --output-dir . --fqbn=esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=enabled,PartitionScheme=min_spiffs  --warnings=none --verbose HeishaMon.ino
+      - name: Build with PlatformIO
+        run: |
+          pio run --environment esp8266
+          pio run --environment esp32s3
 
-      - name: Add MD5 checksum to ESP32 binary
-        run: cd HeishaMon && MD5=`md5sum HeishaMon.ino.bin | cut -d\  -f1` && mv HeishaMon.ino.bin HeishaMon_ESP32-alpha-$MD5.bin
+      - name: Rename and add checksums to binaries
+        run: |
+          cd .pio/build
+
+          # ESP8266
+          if [ -f esp8266/firmware.bin ]; then
+            MD5_ESP8266=$(md5sum esp8266/firmware.bin | cut -d' ' -f1)
+            cp esp8266/firmware.bin ../../HeishaMon_ESP8266-v${{ steps.version.outputs.version }}-${MD5_ESP8266:0:8}.bin
+          fi
+
+          # ESP32-S3
+          if [ -f esp32s3/firmware.bin ]; then
+            MD5_ESP32S3=$(md5sum esp32s3/firmware.bin | cut -d' ' -f1)
+            cp esp32s3/firmware.bin ../../HeishaMon_ESP32S3-v${{ steps.version.outputs.version }}-${MD5_ESP32S3:0:8}.bin
+          fi
+
+          cd ../..
+          ls -la HeishaMon_*.bin
         shell: bash
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: HeishaMon.ino.bin
-          path: HeishaMon/HeishaMon_*.bin
+          name: |
+            ${{ github.event_name == 'pull_request' &&
+                format('HeishaMon-v{0}-pr{1}', steps.version.outputs.version, github.event.number) ||
+                format('HeishaMon-v{0}', steps.version.outputs.version) }}
+          path: HeishaMon_*.bin
+
+      - name: Create Release (on main branch)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: HeishaMon v${{ steps.version.outputs.version }}
+          body: |
+            ## HeishaMon Release v${{ steps.version.outputs.version }}
+
+            **Release Date:** ${{ steps.version.outputs.version_tag }}
+            **Build:** ${{ github.run_number }} | **Commit:** [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+            ### 🔄 Recent Changes
+
+            ${{ steps.version.outputs.changed }}
+
+            ### 📦 Available Binaries
+
+            | Platform | Binary | Flash Size | Target Board |
+            |----------|--------|------------|--------------|
+            | **ESP8266** | `HeishaMon_ESP8266-v${{ steps.version.outputs.version }}-*.bin` | 4MB | WeMos D1 Mini |
+            | **ESP32-S3** | `HeishaMon_ESP32S3-v${{ steps.version.outputs.version }}-*.bin` | 4MB + 2MB PSRAM | ESP32-S3 Development Boards |
+
+            ### 🛠️ Installation
+
+            #### Option 1: Web Flash Tool (Recommended)
+            Use the [ESP Web Tools](https://esphome.github.io/esp-web-tools/) for easy browser-based flashing.
+
+            #### Option 2: Command Line
+            ```bash
+            # ESP8266
+            esptool.py --port /dev/ttyUSB0 --baud 921600 write_flash 0x0 HeishaMon_ESP8266-*.bin
+
+            # ESP32-S3 (USB-CDC)
+            esptool.py --port /dev/ttyACM0 --baud 921600 write_flash 0x0 HeishaMon_ESP32S3-*.bin
+            ```
+
+            ### 🔧 Technical Details
+
+            - **Build System:** PlatformIO ${{ env.PLATFORMIO_VERSION || 'Latest' }}
+            - **Arduino Framework:** ESP8266 Core + ESP32 Core
+            - **Compiler:** GCC with optimization flags
+            - **Libraries:** ArduinoJson, PubSubClient, OneWire, DallasTemperature, Adafruit NeoPixel
+
+            ### 📋 Changelog
+
+            For detailed changes, see the [commit history](https://github.com/${{ github.repository }}/compare/${{ steps.version.outputs.previous_tag }}...v${{ steps.version.outputs.version }}) since the last release.
+
+            ---
+
+            💡 **Need Help?** Check the [Documentation](https://github.com/${{ github.repository }}/blob/main/README.md) or open an [Issue](https://github.com/${{ github.repository }}/issues/new).
+          files: HeishaMon_*.bin
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

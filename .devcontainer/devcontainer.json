@@ -10,6 +10,7 @@
   },
   "remoteUser": "ubuntu",
   "updateRemoteUserUID": true,
+  "privileged": true,
   "customizations": {
     "vscode": {
       "extensions": [
@@ -27,6 +28,7 @@
     "SSH_AUTH_SOCK": "/ssh-agent"
   },
   "mounts": [
-    "source=${env:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
+    "source=${env:SSH_AUTH_SOCK},target=/ssh-agent,type=bind",
+    "source=/dev,target=/dev,type=bind"
   ]
 }
