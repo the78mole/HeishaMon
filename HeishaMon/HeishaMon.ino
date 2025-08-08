@@ -1,5 +1,13 @@
 #define LWIP_INTERNAL
 
+#ifdef NATIVE_SIM
+#include "native_mocks.h"
+  #define heatpumpSerial Serial
+  #define loggingSerial Serial1
+  #define ENABLEPIN 5
+  #define LEDPIN 2
+  #define BOOTPIN 0
+#else
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -25,15 +33,20 @@
 #include <ESPmDNS.h>
 #include <Adafruit_NeoPixel.h>
 #endif
+#endif
 
 
+#ifndef NATIVE_SIM
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
+#endif
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 
+#ifndef NATIVE_SIM
 #include "lwip/apps/sntp.h"
+#endif
 #include "src/common/timerqueue.h"
 #include "src/common/stricmp.h"
 #include "src/common/log.h"
@@ -46,7 +59,9 @@
 #include "rules.h"
 #include "version.h"
 
+#ifndef NATIVE_SIM
 DNSServer dnsServer;
+#endif
 
 //to read bus voltage in stats
 #ifdef ESP8266

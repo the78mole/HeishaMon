@@ -1,5 +1,8 @@
 #define LWIP_INTERNAL
 
+#ifdef NATIVE_SIM
+#include "native_mocks.h"
+#else
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiGratuitous.h>
@@ -9,10 +12,12 @@
 #include <SPI.h>
 #include <Update.h>
 #endif
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
 #include <LittleFS.h>
 #include "src/common/webserver.h"
+#endif
+
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include "dallas.h"
 #include "s0.h"
 #include "HeishaOT.h"
@@ -22,7 +27,11 @@
 
 void log_message(char* string);
 
+#ifdef NATIVE_SIM
+extern std::string apIP;
+#else
 static IPAddress apIP(192, 168, 4, 1);
+#endif
 
 struct settingsStruct {
   uint16_t waitTime = 5; // how often data is read from heatpump

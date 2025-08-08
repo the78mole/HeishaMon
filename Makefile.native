@@ -1,0 +1,42 @@
+CXX=g++
+CXXFLAGS=-std=c++11 -DNATIVE_SIM -pthread -Wall -Wno-unused-parameter -Wno-unused-variable -Wno-missing-field-initializers
+INCLUDES=-IHeishaMon -IHeishaMon/src -IHeishaMon/src/common
+
+SRCDIR=HeishaMon
+# Start with core sources, add more as we fix compilation issues
+SOURCES=$(SRCDIR)/native_mocks.cpp \
+        $(SRCDIR)/native_main.cpp \
+        $(SRCDIR)/src/common/log.cpp \
+        $(SRCDIR)/src/common/timerqueue.cpp \
+        $(SRCDIR)/src/common/stricmp.cpp
+
+OBJECTS=$(SOURCES:.cpp=.o)
+TARGET=heishamon_native
+
+# Libraries needed for native simulation
+LDFLAGS=-pthread
+
+.PHONY: clean test build-core
+
+test: $(TARGET)
+	./$(TARGET)
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(TARGET) test_mocks HeishaMon/native_mocks.o HeishaMon/native_test.o
+
+# Test just the mocks
+test-mocks: HeishaMon/native_mocks.o HeishaMon/native_test.o
+	$(CXX) $^ -o test_mocks $(LDFLAGS)
+	./test_mocks
+
+# Try to build core functionality
+build-core: $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+.SECONDARY: $(OBJECTS)
