@@ -1,0 +1,20 @@
+[Unit]
+Description=Panasonic Heat Pump Emulator
+After=network.target
+
+[Service]
+Type=simple
+User=heishamon
+Group=dialout
+WorkingDirectory=/opt/heishamon/heat_pump_emulator
+ExecStart=/usr/bin/python3 /opt/heishamon/heat_pump_emulator/heat_pump_emulator.py --port /dev/ttyUSB0 --config default.json
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+Environment=PYTHONPATH=/opt/heishamon/heat_pump_emulator
+
+[Install]
+WantedBy=multi-user.target
