@@ -1,3 +1,7 @@
+#ifdef NATIVE_SIM
+#include "native_mocks.h"
+#endif
+
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 

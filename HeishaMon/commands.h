@@ -1,5 +1,9 @@
 #define LWIP_INTERNAL
 
+#ifdef NATIVE_SIM
+#include "native_mocks.h"
+#endif
+
 #include <ArduinoJson.h>
 
 #define DATASIZE 203

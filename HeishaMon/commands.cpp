@@ -478,7 +478,7 @@ unsigned int set_bivalent_mode(char *msg, unsigned char *cmd, char *log_msg) {
 unsigned int set_curves(char *msg, unsigned char *cmd, char *log_msg) {
   memcpy_P(cmd, panasonicSendQuery, sizeof(panasonicSendQuery));
 
-  JsonDocument jsonDoc;
+  DynamicJsonDocument jsonDoc(2048);
   DeserializationError error = deserializeJson(jsonDoc, msg);
   if (!error) {
     char tmpmsg[256] = { 0 };

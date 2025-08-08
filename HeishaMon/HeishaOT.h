@@ -1,6 +1,10 @@
 #ifndef _HEISHA_OT_H_
 #define _HEISHA_OT_H_
 
+#ifdef NATIVE_SIM
+#include "native_mocks.h"
+#endif
+
 #include <PubSubClient.h>
 #include "src/common/webserver.h"
 

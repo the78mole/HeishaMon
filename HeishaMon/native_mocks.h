@@ -14,10 +14,42 @@
 #include <cstdarg>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cmath>
 
 // Arduino core compatibility types
 typedef uint8_t byte;
 typedef bool boolean;
+
+// Arduino String class mock
+class String {
+public:
+    String() {}
+    String(const char* str) : _str(str ? str : "") {}
+    String(const std::string& str) : _str(str) {}
+    String(int value) { _str = std::to_string(value); }
+    String(float value) { _str = std::to_string(value); }
+    String(double value) { _str = std::to_string(value); }
+    
+    const char* c_str() const { return _str.c_str(); }
+    operator const char*() const { return _str.c_str(); }
+    
+    float toFloat() const { return std::stof(_str); }
+    int toInt() const { return std::stoi(_str); }
+    
+    String& operator=(const char* str) { _str = str ? str : ""; return *this; }
+    String& operator=(const std::string& str) { _str = str; return *this; }
+    
+    String operator+(const String& other) const { return String(_str + other._str); }
+    String operator+(const char* str) const { return String(_str + (str ? str : "")); }
+    
+    bool operator==(const String& other) const { return _str == other._str; }
+    bool operator==(const char* str) const { return _str == (str ? str : ""); }
+    
+    size_t length() const { return _str.length(); }
+    
+private:
+    std::string _str;
+};
 
 // Mock Serial class for native simulation
 class MockSerial {
@@ -146,6 +178,10 @@ public:
         ~MockFile() { if (_file) fclose(_file); }
         operator bool() const { return _valid; }
         void close() { if (_file) { fclose(_file); _file = nullptr; _valid = false; } }
+        size_t write(uint8_t data) {
+            return _file ? fwrite(&data, 1, 1, _file) : 0;
+        }
+        
         size_t write(const uint8_t* data, size_t len) {
             return _file ? fwrite(data, 1, len, _file) : 0;
         }
@@ -276,6 +312,10 @@ inline int snprintf_P(char* buffer, size_t size, const char* format, ...) {
     return result;
 }
 
+inline void memcpy_P(void* dest, const void* src, size_t n) {
+    memcpy(dest, src, n);
+}
+
 // Global mock objects
 extern MockSerial Serial;
 extern MockSerial Serial1;
@@ -285,6 +325,9 @@ extern MockMDNS MDNS;
 extern MockLittleFS LittleFS;
 extern MockArduinoOTA ArduinoOTA;
 extern MockDNSServer dnsServer;
+
+// File type alias
+typedef MockLittleFS::MockFile File;
 
 // WiFi constants
 #define WL_CONNECTED 3
@@ -315,6 +358,7 @@ extern MockDNSServer dnsServer;
 #define PSTR(s) (s)
 #define F(string_literal) (string_literal)
 #define _F(string_literal) (string_literal)
+#define PGM_P const char*
 
 // DNS constants
 #define DNS_PORT 53
@@ -343,6 +387,17 @@ inline time_t time(time_t* t) {
     if (t) *t = now;
     return now;
 }
+
+// Math functions
+using std::exp;
+using std::log;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::sqrt;
+using std::pow;
+using std::abs;
+using std::fabs;
 
 // SNTP mocks
 inline void sntp_stop() {}
