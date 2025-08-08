@@ -11,7 +11,17 @@ pio
 build_output
 firmware.map
 firmware.asm
+
+# Binary files and build artifacts
 *.bin
 *.map
 *.elf
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
 
