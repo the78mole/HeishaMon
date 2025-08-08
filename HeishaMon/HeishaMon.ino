@@ -1,6 +1,16 @@
 #define LWIP_INTERNAL
 
-#if defined(ESP8266)
+#ifdef HOST_SIM
+  // Host simulation includes
+  #include "src/host_sim/Arduino.h"
+  #include "src/host_sim/WiFi.h"
+  #include "src/host_sim/network_mocks.h"
+  #define heatpumpSerial Serial
+  #define loggingSerial Serial
+  #define ENABLEPIN 5
+  #define LEDPIN 2
+  #define BOOTPIN 0
+#elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
   #define heatpumpSerial Serial
@@ -28,10 +38,11 @@
 #endif
 
 
+#ifndef HOST_SIM
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
+#endif
 #include <ArduinoJson.h>
 
 // Forward declarations
@@ -43,7 +54,9 @@ void mqttPublish(char* topic, char* subtopic, char* value, bool retain);
 byte calcChecksum(byte* command, int length);
 bool isValidReceiveChecksum(char* check_data, byte check_length);
 
+#ifndef HOST_SIM
 #include "lwip/apps/sntp.h"
+#endif
 #include "src/common/timerqueue.h"
 #include "src/common/stricmp.h"
 #include "src/common/log.h"
@@ -56,10 +69,12 @@ bool isValidReceiveChecksum(char* check_data, byte check_length);
 #include "rules.h"
 #include "version.h"
 
+#ifndef HOST_SIM
 DNSServer dnsServer;
+#endif
 
 //to read bus voltage in stats
-#ifdef ESP8266
+#if defined(ESP8266) && !defined(HOST_SIM)
 ADC_MODE(ADC_VCC);
 #endif
 

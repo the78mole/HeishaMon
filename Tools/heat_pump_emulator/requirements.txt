@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+"""
+Requirements file for the Panasonic Heat Pump Emulator
+"""
+
+pyserial>=3.5

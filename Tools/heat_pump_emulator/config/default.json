@@ -1,0 +1,47 @@
+{
+    "model": {
+        "name": "CU-E12DKUA / CS-E12DKUA",
+        "series": "E-series",
+        "capacity": "12kW",
+        "bytes": [226, 206, 13, 113, 129, 114, 206, 12, 146, 129]
+    },
+    "initial_state": {
+        "heatpump_on": true,
+        "operating_mode": "heat+dhw",
+        "dhw_target": 45,
+        "outdoor_temp": 10.0,
+        "z1_temp": 22.0,
+        "dhw_temp": 45.0,
+        "quiet_mode": 0,
+        "powerful_mode": 0,
+        "holiday_mode": false,
+        "scheduler_on": false
+    },
+    "simulation": {
+        "speed": 1.0,
+        "thermal_mass_factor": 0.01,
+        "dhw_heating_rate": 0.02,
+        "outdoor_temp_variation": {
+            "enabled": true,
+            "min": 5.0,
+            "max": 15.0,
+            "period_hours": 24
+        }
+    },
+    "sensor_ranges": {
+        "outdoor_temp": [-20, 40],
+        "dhw_temp": [10, 80],
+        "z1_temp": [5, 35],
+        "inlet_temp": [5, 60],
+        "outlet_temp": [5, 65],
+        "compressor_freq": [0, 90],
+        "pump_flow": [0, 20],
+        "pump_speed": [0, 3000],
+        "fan_speed": [0, 800]
+    },
+    "error_simulation": {
+        "enabled": false,
+        "probability": 0.001,
+        "error_codes": ["F12", "F15", "F42", "H15"]
+    }
+}
