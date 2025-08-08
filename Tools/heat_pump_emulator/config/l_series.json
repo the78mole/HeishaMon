@@ -1,0 +1,47 @@
+{
+    "model": {
+        "name": "CU-L12DKUA / CS-L12DKUA",
+        "series": "L-series",
+        "capacity": "12kW",
+        "bytes": [226, 207, 14, 114, 130, 115, 207, 13, 147, 130]
+    },
+    "initial_state": {
+        "heatpump_on": true,
+        "operating_mode": "auto+dhw",
+        "dhw_target": 50,
+        "outdoor_temp": 5.0,
+        "z1_temp": 20.0,
+        "dhw_temp": 50.0,
+        "quiet_mode": 1,
+        "powerful_mode": 0,
+        "holiday_mode": false,
+        "scheduler_on": true
+    },
+    "simulation": {
+        "speed": 2.0,
+        "thermal_mass_factor": 0.008,
+        "dhw_heating_rate": 0.025,
+        "outdoor_temp_variation": {
+            "enabled": true,
+            "min": 0.0,
+            "max": 10.0,
+            "period_hours": 24
+        }
+    },
+    "sensor_ranges": {
+        "outdoor_temp": [-25, 35],
+        "dhw_temp": [10, 75],
+        "z1_temp": [10, 30],
+        "inlet_temp": [5, 55],
+        "outlet_temp": [5, 60],
+        "compressor_freq": [15, 85],
+        "pump_flow": [5, 18],
+        "pump_speed": [500, 2800],
+        "fan_speed": [100, 750]
+    },
+    "error_simulation": {
+        "enabled": false,
+        "probability": 0.0005,
+        "error_codes": ["F11", "F14", "F43", "H14"]
+    }
+}
