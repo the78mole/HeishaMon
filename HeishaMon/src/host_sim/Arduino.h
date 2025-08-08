@@ -9,6 +9,9 @@
 #include <ctime>
 #include <iostream>
 #include <string>
+#include <cmath>
+#include <chrono>
+#include <thread>
 
 #include "pgmspace.h"
 
@@ -38,12 +41,30 @@ typedef bool boolean;
 #define DEG_TO_RAD 0.017453292519943295769236907684886
 #define RAD_TO_DEG 57.295779513082320876798154814105
 
-// Arduino min/max macros
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
-#define abs(x) ((x)>0?(x):-(x))
-#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define round(x) ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+// Arduino min/max macros - protected to avoid conflicts with std library
+#ifdef min
+#undef min
+#endif
+#ifdef max 
+#undef max
+#endif
+#ifdef abs
+#undef abs
+#endif
+#ifdef round
+#undef round
+#endif
+
+// Arduino-compatible functions without macro conflicts
+template<typename T>
+inline T arduino_min(T a, T b) { return (a < b) ? a : b; }
+template<typename T>
+inline T arduino_max(T a, T b) { return (a > b) ? a : b; }
+template<typename T>
+inline T arduino_abs(T x) { return (x >= 0) ? x : -x; }
+inline long arduino_round(double x) { return (x >= 0) ? (long)(x + 0.5) : (long)(x - 0.5); }
+template<typename T>
+inline T constrain(T amt, T low, T high) { return (amt < low) ? low : ((amt > high) ? high : amt); }
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
@@ -152,9 +173,6 @@ public:
 private:
     std::string data;
 };
-
-extern SerialClass Serial;
-extern SerialClass Serial1;
 
 // Print base class for Arduino compatibility
 class Print {
@@ -287,6 +305,38 @@ public:
     void flush() { fflush(stdout); }
 };
 
+// Stream class for Arduino compatibility
+class Stream : public Print {
+public:
+    virtual int available() = 0;
+    virtual int read() = 0;
+    virtual int peek() { return -1; }
+    virtual void flush() {}
+    
+    // Find functions
+    bool find(const char *target) { (void)target; return false; }
+    bool findUntil(const char *target, const char *terminator) { 
+        (void)target; (void)terminator; return false; 
+    }
+    
+    // Read functions
+    String readString() { return String(""); }
+    String readStringUntil(char terminator) { (void)terminator; return String(""); }
+    int readBytes(char *buffer, size_t length) { 
+        (void)buffer; (void)length; return 0; 
+    }
+    
+    // Timeout functions
+    void setTimeout(unsigned long timeout) { (void)timeout; }
+    unsigned long getTimeout() { return 1000; }
+};
+
+// Printable class for Arduino compatibility
+class Printable {
+public:
+    virtual size_t printTo(Print& p) const = 0;
+};
+
 extern SerialClass Serial;
 extern SerialClass Serial1;
 
@@ -306,6 +356,14 @@ void delayMicroseconds(unsigned int us);
 long map(long value, long fromLow, long fromHigh, long toLow, long toHigh);
 unsigned int makeWord(unsigned int w);
 unsigned int makeWord(unsigned char h, unsigned char l);
+
+// Math functions from cmath
+using std::sin;
+using std::cos;
+using std::tan;
+using std::fmod;
+using std::sqrt;
+using std::pow;
 
 // Setup and loop functions that need to be implemented
 void setup();

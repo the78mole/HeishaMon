@@ -1,9 +1,9 @@
 #ifdef HOST_SIM
 
-#include "Arduino.h"
 #include <chrono>
 #include <thread>
 #include <unistd.h>
+#include "Arduino.h"
 
 // Global instances
 SerialClass Serial;
