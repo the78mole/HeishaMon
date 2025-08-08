@@ -1,4 +1,4 @@
-[![Join us on Slack chat room](https://img.shields.io/badge/Slack-Join%20the%20chat%20room-orange)](https://join.slack.com/t/panasonic-wemos/shared_invite/enQtODg2MDY0NjE1OTI3LTgzYjkwMzIwNTAwZTMyYzgwNDQ1Y2QxYjkwODg3NjMyN2MyM2ViMDM3Yjc3OGE3MGRiY2FkYzI4MzZiZDVkNGE) 
+[![Join us on Slack chat room](https://img.shields.io/badge/Slack-Join%20the%20chat%20room-orange)](https://join.slack.com/t/panasonic-wemos/shared_invite/enQtODg2MDY0NjE1OTI3LTgzYjkwMzIwNTAwZTMyYzgwNDQ1Y2QxYjkwODg3NjMyN2MyM2ViMDM3Yjc3OGE3MGRiY2FkYzI4MzZiZDVkNGE)
 [![Build binary](https://github.com/the78mole/HeishaMon/actions/workflows/main.yml/badge.svg)](https://github.com/the78mole/HeishaMon/actions/workflows/main.yml)
 
 
@@ -13,7 +13,27 @@ Suomen kielellä [README_FI.md](README_FI.md) luettavissa täällä.
 *Help on translation to other languages is welcome.*
 
 # Current releases
-Latest release is available [here](https://github.com/Egyras/HeishaMon/releases). The ESP8266 compiled binary can be installed on a Wemos D1 mini, on the HeishaMon PCB and generally on any ESP8266 based board compatible with Wemos build settings (at least 4MB flash). You can also download the code and compile it yourself (see required libraries below). The ESP32-S3 binary is for the newer, large, version of heishamon.
+Latest release is available [here](https://github.com/Egyras/HeishaMon/releases). The ESP8266 compiled binary can be installed on a Wemos D1 mini, on the HeishaMon PCB and generally on any ESP8266 based board compatible with Wemos build settings (at least 4MB flash). You can also download the code and compile it yourself (see building instructions below). The ESP32-S3 binary is for the newer, large, version of heishamon.
+
+## New Features 🎉
+- **PlatformIO Support**: Full PlatformIO configuration for easy development and building
+- **Multi-Platform**: Supports both ESP8266 (WeMos D1 Mini) and ESP32-S3 platforms
+- **Modern Toolchain**: Updated to work with latest Arduino frameworks and libraries
+- **VS Code Integration**: Pre-configured tasks for seamless development experience
+
+## Quick Start for Developers 🚀
+```bash
+# Clone the repository
+git clone https://github.com/the78mole/HeishaMon.git
+cd HeishaMon
+
+# Build with PlatformIO
+pio run
+
+# Or build specific target
+pio run -e esp8266    # For ESP8266/WeMos D1 Mini
+pio run -e esp32s3    # For ESP32-S3/Large HeishaMon
+```
 
 
 # Using the software
@@ -321,10 +341,99 @@ To make things easy you can order a completed PCB from some project members: \
 [Tindie shop](https://www.tindie.com/stores/thehognl/) from Igor Ybema (aka TheHogNL) based in the Netherlands
 
 ## Building the arduino image yourself
+
+### PlatformIO (Recommended)
+This project is now fully configured for PlatformIO development with support for both ESP8266 and ESP32-S3 targets:
+
+**Prerequisites:**
+- [PlatformIO Core](https://platformio.org/install/cli) or [PlatformIO IDE](https://platformio.org/platformio-ide)
+- VS Code with PlatformIO extension (optional but recommended)
+
+**Build commands:**
+```bash
+# Build for ESP8266 (WeMos D1 Mini)
+pio run -e esp8266
+
+# Build for ESP32-S3 (Large HeishaMon board)
+pio run -e esp32s3
+
+# Build all targets
+pio run
+
+# Upload to device (USB)
+pio run -e esp8266 --target upload
+pio run -e esp32s3 --target upload
+```
+
+**VS Code Tasks:**
+The project includes pre-configured VS Code tasks for easy building and deployment:
+- `PlatformIO: Build ESP8266`
+- `PlatformIO: Build ESP32-S3`
+- `PlatformIO: Build All`
+- `PlatformIO: Upload ESP8266 (USB)` - Upload via USB cable
+- `PlatformIO: Upload ESP32-S3 (USB)` - Upload via USB cable
+- `PlatformIO: OTA Upload ESP8266` - Wireless update (prompts for device address)
+- `PlatformIO: OTA Upload ESP32-S3` - Wireless update (prompts for device address)
+
+**OTA (Over-The-Air) Updates:**
+For remote firmware deployment without USB cable:
+
+```bash
+# Basic OTA update using hostname
+pio run -e esp8266 --target upload --upload-port heishamon.local
+pio run -e esp32s3 --target upload --upload-port heishamon.local
+
+# OTA update using IP address
+pio run -e esp8266 --target upload --upload-port 192.168.1.100
+
+# OTA with password (if OTA password is set)
+pio run -e esp8266 --target upload --upload-port heishamon.local --upload-flag="--auth=heisha"
+
+# Find devices on network
+pio device list
+
+# Or use network discovery
+avahi-browse -t _arduino._tcp
+```
+
+**Note:** The device must be running HeishaMon firmware with OTA enabled for wireless updates to work.
+
+**Technical Improvements:**
+- ✅ **ArduinoJson 6.x Compatibility**: Updated for modern JSON library
+- ✅ **ESP32 Arduino Core 3.x Support**: Compatible with latest ESP32 framework
+- ✅ **Automatic Dependency Management**: PlatformIO handles all libraries
+- ✅ **Multi-Target Configuration**: Single project supports both ESP8266 and ESP32-S3
+- ✅ **Memory Optimizations**: Optimized build flags for both platforms
+
+**Platform Support:**
+
+| Platform | Board | RAM Usage | Flash Usage | Features |
+|----------|-------|-----------|-------------|----------|
+| ESP8266 | WeMos D1 Mini | ~49% | ~63% | WiFi, MQTT, 1-Wire, S0 |
+| ESP32-S3 | Large HeishaMon | ~18% | ~59% | WiFi, Ethernet, MQTT, 1-Wire, S0, Relays |
+
+**Troubleshooting PlatformIO:**
+```bash
+# Clean build cache
+pio run --target clean
+
+# Update PlatformIO
+pio update
+
+# Install specific platform
+pio platform install espressif8266@^4.2.1
+pio platform install espressif32@^6.7.0
+```
+
+### Arduino IDE (Legacy)
+For Arduino IDE development:
+
 boards: \
 esp8266 by esp8266 community version 3.0.2 [Arduino](https://github.com/esp8266/Arduino/releases/tag/3.0.2)
 
 All the [libs we use](LIBSUSED.md) necessary for compiling.
+
+**Note:** PlatformIO automatically manages all dependencies, while Arduino IDE requires manual library installation.
 
 
 ## MQTT topics
@@ -342,9 +451,9 @@ The newer, large, heishamon contains two onboard relays which can be switched on
 ## Opentherm support
 If your heishamon board supports opentherm the software can also be used to bridge opentherm information from a compatible thermostat to your home automation over MQTT or JSON and as mentioned above it can also be connected directly in the rules to connect opentherm information to the heatpump and back, for example to display the outside temperature from the heatpump on your opentherm thermostat. If you enable opentherm support in settings there will be a new tab visible in the web page. On that tab you will see opentherm values. Some are of type R(ead) and some are W(rite), and some are both. Read means that the thermostat can read that information from the heishamon. You provide that information over MQTT (or using the rules) by updating this value on the mqtt 'opentherm/read' topic, for example 'panasonic_heat_pump/opentherm/read/outsideTemp'. The write values are information from the thermostat, like 'roomTemp'. These are available on mqtt topic 'opentherm/write'. You can use these values to change the heatpump behaviour in anyway you want using your home automation and mqtt set-commands to heishamon on using the internal rules.
 
-The available opentherm variables are: 
+The available opentherm variables are:
 ### WRITE values
-- chEnable which is a boolean showing if central heating shoud be enabled. This is often used when the thermostat wants to heat up your house. 
+- chEnable which is a boolean showing if central heating shoud be enabled. This is often used when the thermostat wants to heat up your house.
 - dhwEnable which is a boolean showing if the dhw heating should be enabled. Often used as a user option on the thermostat to disable DHW heating during vacation
 - coolingEnable which is a boolean showing if  cooling should be enabled. Amount of cooling is request in 'coolingControl', see below.
 - roomTemp is the floating point value of the measured room temp by thermostat
@@ -383,5 +492,3 @@ The available opentherm variables are:
 [IOBroker Manual](Integrations/ioBroker_manual)
 
 [Domoticz](Integrations/Domoticz)
-
-
