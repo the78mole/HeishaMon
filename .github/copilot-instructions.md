@@ -15,12 +15,15 @@ Always reference these instructions first and fallback to search or bash command
   ```
 - Configure Arduino CLI board manager URLs:
   ```bash
-  export ARDUINO_BOARD_MANAGER_ADDITIONAL_URLS="http://arduino.esp8266.com/stable/package_esp8266com_index.json https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json"
+  export ARDUINO_BOARD_MANAGER_ADDITIONAL_URLS="https://arduino.esp8266.com/stable/package_esp8266com_index.json https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json"
   ```
 - Update core index and install platforms (requires internet):
   ```bash
   arduino-cli core update-index
   arduino-cli core install esp8266:esp8266
+  # ESP32 core version is pinned to 3.0.7 for compatibility reasons.
+  # If you wish to use a newer version, ensure you test thoroughly as later versions may introduce breaking changes or incompatibilities with this firmware.
+  # Version 3.0.7 is the last known stable version tested with HeishaMon as of [last update]. Update this note if future versions are validated.
   arduino-cli core install esp32:esp32@3.0.7
   ```
   **Installation time**: 5-10 minutes depending on connection. NEVER CANCEL. Set timeout to 20+ minutes.
@@ -33,7 +36,7 @@ Always reference these instructions first and fallback to search or bash command
   ```bash
   sed -i '/#include <driver\/rtc_io\.h>/a\
   #include <soc\/gpio_struct\.h>' \
-  /home/runner/Arduino/libraries/OneWire/util/OneWire_direct_gpio.h
+  "$HOME/Arduino/libraries/OneWire/util/OneWire_direct_gpio.h"
   ```
 
 ### Building the Firmware
