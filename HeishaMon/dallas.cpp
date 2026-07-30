@@ -4,6 +4,7 @@
 #include "commands.h"
 #include "dallas.h"
 #include "rules.h"
+#include "script_engine.h"
 #include "src/common/progmem.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
@@ -106,6 +107,7 @@ void readNewDallasTemp(PubSubClient &mqtt_client, void (*log_message)(char*), ch
           sprintf_P(log_msg, PSTR("{\"data\": {\"dallasvalues\": {\"sensorID\": \"%s\", \"value\": %.2f}}}"), actDallasData[i].address, actDallasData[i].temperature);
           websocket_write_all(log_msg, strlen(log_msg));          
           rules_event_cb(_F("ds18b20#"), actDallasData[i].address);
+          scriptEngine.handleEvent("ds18b20#", actDallasData[i].address);
         }
       }
     }

@@ -44,6 +44,8 @@
 #include "decode.h"
 #include "commands.h"
 #include "rules.h"
+#include "script_engine.h"
+#include "script_server.h"
 #include "version.h"
 
 DNSServer dnsServer;
@@ -1302,7 +1304,7 @@ void setupConditionals() {
 
 void timer_cb(int nr) {
   if (nr > 0) {
-    rules_timer_cb(nr);
+    scriptEngine.handleTimer(nr);
   } else {
     switch (nr) {
       case -1: {
@@ -1321,21 +1323,15 @@ void timer_cb(int nr) {
           setupWifi(&heishamonSettings);
         } break;
       case -4: {
-          int ret = rules_parse((char*)"/rules.new");
+          int ret = scriptEngine.parseScripts();
           if (ret == -2) {
-            //we received an empty rules.new file which means delete all rules
-            LittleFS.remove("/rules.txt");
-            LittleFS.remove("/rules.new");
-            rules_deinitialize();
+            //we received an empty scripts which means delete all scripts
+            LittleFS.remove("/scripts");
+            scriptEngine.deinitialize();
           } else if (ret == -1) {
-            log_message(_F("Failed to load new rules, reverting back to older rules!"));
-            rules_parse((char*)"/rules.txt");
-          } else {
-            if (LittleFS.begin()) {
-              LittleFS.rename("/rules.new", "/rules.txt");
-            }
+            log_message(_F("Failed to load new scripts!"));
           }
-          rules_boot();
+          scriptEngine.handleBoot();
         } break;
       case -5: {
           ntpReload(&heishamonSettings);
@@ -1495,14 +1491,16 @@ void setup() {
       loggingSerial.printf(PSTR("Reset reason: %d\n"), reset_reason);
     if (reset_reason > 3 && reset_reason < 12) {  //is this correct for esp32?
 #endif  
-        loggingSerial.println("Not loading rules due to crash reboot!");
+        loggingSerial.println("Not loading scripts due to crash reboot!");
     } else {
-      rules_parse((char *)"/rules.txt");
-      rules_boot();
+      scriptEngine.begin();
+      scriptEngine.parseScripts();
+      scriptEngine.handleBoot();
     }
   } else {
-    rules_parse((char *)"/rules.txt");
-    rules_boot();
+    scriptEngine.begin();
+    scriptEngine.parseScripts();
+    scriptEngine.handleBoot();
   }
 
   delay(200); //small delay to allow double reset
@@ -1516,6 +1514,12 @@ void setup() {
   //loggingSerial.println(F("Clearing double reset flag.."));
   //LittleFS.remove("/doublereset");  
   //loggingSerial.println(F("End of setup.."));
+
+  // Start script server for remote script editing
+  if (WiFi.status() == WL_CONNECTED) {
+    scriptServer.begin();
+    logprintf_P(F("Script server available at http://%s:8080/scripts/"), WiFi.localIP().toString().c_str());
+  }
 
   inSetup = false;
 }
@@ -1585,6 +1589,9 @@ void loop() {
 
   //webserver function
   webserver_loop();
+  
+  // Handle script server
+  scriptServer.handleClient();
 
   // check wifi
   check_wifi();
