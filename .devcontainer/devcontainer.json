@@ -1,6 +1,6 @@
 {
-  "name": "arduino-cli",
-  "image": "ghcr.io/the78mole/heishamon-dev:v0.0.9",
+  "name": "arduino-pio",
+  "image": "ghcr.io/the78mole/heishamon-pio:v0.0.9",
   "postCreateCommand": "./.devcontainer/postCreate.sh",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -10,11 +10,16 @@
   },
   "remoteUser": "ubuntu",
   "updateRemoteUserUID": true,
+  "privileged": true,
   "customizations": {
     "vscode": {
       "extensions": [
         "vsciot-vscode.vscode-arduino",
-        "ms-vscode.cpptools"
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.vscode-python-envs",
+        "platformio.platformio-ide"
       ]
     }
   },
@@ -23,6 +28,7 @@
     "SSH_AUTH_SOCK": "/ssh-agent"
   },
   "mounts": [
-    "source=${env:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
+    "source=${env:SSH_AUTH_SOCK},target=/ssh-agent,type=bind",
+    "source=/dev,target=/dev,type=bind"
   ]
 }
